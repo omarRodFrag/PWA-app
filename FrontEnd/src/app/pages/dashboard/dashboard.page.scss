@@ -1,0 +1,36 @@
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  ion-button {
+    height: 2.5rem;
+    --border-radius: 20px;
+  }
+}
+
+.task-list {
+  ion-card {
+    margin-bottom: 1rem;
+
+    .task-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+
+      .priority.low { color: green; font-weight: bold; }
+      .priority.medium { color: orange; font-weight: bold; }
+      .priority.high { color: red; font-weight: bold; }
+
+      .estado {
+        text-transform: capitalize;
+      }
+
+      .fecha {
+        font-size: 0.8rem;
+        color: gray;
+      }
+    }
+  }
+}

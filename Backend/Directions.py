@@ -7,22 +7,15 @@ import Backend.Functions as callMethod
 from Backend.Functions import token_required
 
 import Backend.GlobalInfo.Helpers as HelperFunctions
-
 import Backend.GlobalInfo.Messages as ResponseMessage
-
 from flask import Flask, jsonify, request
-
 import json
-
 import Backend.GlobalInfo.keys as BaseDatos
-from Backend.Functions import dbConnLocal  # Para hacer la conexión a la BD
+from Backend.Functions import dbConnLocal  # Para la BD
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-
-
-
 
 # Configuración de Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -33,165 +26,175 @@ app.config['MAIL_PASSWORD'] = 'svxf owxq meja eavy'
 app.config['MAIL_DEFAULT_SENDER'] = 'omar.rod.fraf@gmail.com'
 mail = Mail(app)
 
+# ------------------- LOGIN / MFA -------------------
 
-
-
-
-# Ruta para el login
 @app.route('/login', methods=['POST'])
 def login():
     try:
         data = request.get_json()
         email = data.get('strEmail')
         password = data.get('strPassword')
-
-        # Llamar a la función de login
-        response = callMethod.fnLogin(email,password)
+        response = callMethod.fnLogin(email, password)
         return jsonify(response), response['intResponse']
     except Exception as e:
         print(str(e))
         return jsonify({'error': 'Error en la petición'}), 400
 
-# Ruta para verificar el código MFA
 @app.route('/verify', methods=['POST'])
 @token_required
 def verify_code(current_user):
     try:
         data = request.get_json()
-        print("Datos recibidos:", data)
-        
-        # Ya no necesitas extraer el email del body
         email = current_user['strEmail']
         entered_code = data.get('code')
-
-        # Buscar el código de verificación en la base de datos
         user = dbConnLocal.clUsuarios.find_one({"strEmail": email})
 
         if user:
-            print(user)
             stored_code = user.get('verification_code')
-            
-            if str(entered_code) == str(stored_code):  # Compara el código ingresado con el generado
+            if str(entered_code) == str(stored_code):
                 return jsonify({'message': 'Código verificado correctamente'}), 200
             else:
                 return jsonify({'message': 'Código incorrecto'}), 400
         else:
             return jsonify({'message': 'Usuario no encontrado'}), 404
-
     except Exception as e:
         print(str(e))
         return jsonify({'message': 'Error al verificar el código'}), 500
 
+# ------------------- TAREAS -------------------
 
-# API para obtener todos los productos
-@app.route('/productos', methods=['GET'])
+@app.route('/tasks', methods=['GET'])
 @token_required
-def obtener_productos(current_user):
+def obtener_tareas(current_user):
     try:
-        productos = callMethod.obtener_productos()
-        return jsonify(productos), 200
+        tareas = callMethod.obtener_tareas()
+        return jsonify(tareas), 200
     except Exception as e:
         HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al obtener productos'}), 500
+        return jsonify({'error': 'Error al obtener tareas'}), 500
 
-
-
-# API para obtener un producto específico
-@app.route('/productos/<int:idProducto>', methods=['GET'])
+@app.route('/tasks/<int:idTarea>', methods=['GET'])
 @token_required
-def obtener_producto(current_user, idProducto):
+def obtener_tarea(current_user, idTarea):
     try:
-        producto = callMethod.obtener_producto(idProducto)
-        if producto:
-            return jsonify(producto), 200
+        tarea = callMethod.obtener_tarea(idTarea)
+        if tarea:
+            return jsonify(tarea), 200
         else:
-            return jsonify({'error': 'Producto no encontrado'}), 404
+            return jsonify({'error': 'Tarea no encontrada'}), 404
     except Exception as e:
         HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al obtener producto'}), 500
+        return jsonify({'error': 'Error al obtener tarea'}), 500
 
-
-@app.route('/productos/agregar', methods=['POST'])
+@app.route('/tasks/agregar', methods=['POST'])
 @token_required
-def agregar_producto(current_user):
+def agregar_tarea(current_user):
     try:
         data = request.get_json()
-        resultado = callMethod.agregar_producto(data)
+        resultado = callMethod.agregar_tarea(data)
         if resultado['success']:
-            return jsonify({'message': 'Producto agregado correctamente'}), 201
+            return jsonify({'message': 'Tarea agregada correctamente'}), 201
         else:
             return jsonify({'error': resultado['error']}), 400
     except Exception as e:
         HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al agregar producto'}), 500
+        return jsonify({'error': 'Error al agregar tarea'}), 500
 
-
-@app.route('/productos/actualizar/<int:idProducto>', methods=['PUT'])
+@app.route('/tasks/actualizar/<int:idTarea>', methods=['PUT'])
 @token_required
-def actualizar_producto(current_user, idProducto):
+def actualizar_tarea(current_user, idTarea):
     try:
         data = request.get_json()
-        resultado = callMethod.actualizar_producto(idProducto, data)
+        resultado = callMethod.actualizar_tarea(idTarea, data)
         if resultado['success']:
-            return jsonify({'message': 'Producto actualizado correctamente'}), 200
+            return jsonify({'message': 'Tarea actualizada correctamente'}), 200
         else:
             return jsonify({'error': resultado['error']}), 400
     except Exception as e:
         HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al actualizar el producto'}), 500
+        return jsonify({'error': 'Error al actualizar tarea'}), 500
 
-@app.route('/productos/stock/<int:idProducto>', methods=['PATCH'])
+@app.route('/tasks/eliminar/<int:idTarea>', methods=['DELETE'])
 @token_required
-def ajustar_stock(current_user, idProducto):
+def eliminar_tarea(current_user, idTarea):
     try:
-        data = request.get_json()
-        cantidad = data.get("cantidad")  # Puede ser positiva o negativa
-
-        resultado = callMethod.ajustar_stock(idProducto, cantidad)
+        resultado = callMethod.eliminar_tarea(idTarea)
         if resultado['success']:
-            return jsonify({'message': 'Stock ajustado correctamente'}), 200
-        else:
-            return jsonify({'error': resultado['error']}), 400
-    except Exception as e:
-        HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al ajustar el stock'}), 500
-    
-
-@app.route('/productos/eliminar/<int:idProducto>', methods=['DELETE'])
-@token_required
-def eliminar_producto(current_user, idProducto):
-    try:
-        resultado = callMethod.eliminar_producto(idProducto)
-        if resultado['success']:
-            return jsonify({'message': 'Producto eliminado correctamente'}), 200
+            return jsonify({'message': 'Tarea eliminada correctamente'}), 200
         else:
             return jsonify({'error': resultado['error']}), 404
     except Exception as e:
         HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al eliminar el producto'}), 500
-    
+        return jsonify({'error': 'Error al eliminar tarea'}), 500
 
+# ------------------- USUARIOS -------------------
 
-@app.route('/productos/estado/<int:idProducto>', methods=['PATCH'])
+@app.route('/usuarios', methods=['GET'])
 @token_required
-def cambiar_estado_producto(current_user, idProducto):
+def obtener_usuarios(current_user):
+    try:
+        usuarios = callMethod.obtener_usuarios()
+        return jsonify(usuarios), 200
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return jsonify({'error': 'Error al obtener usuarios'}), 500
+
+@app.route('/usuarios/<int:idUsuario>', methods=['GET'])
+@token_required
+def obtener_usuario(current_user, idUsuario):
+    try:
+        usuario = callMethod.obtener_usuario(idUsuario)
+        if usuario:
+            return jsonify(usuario), 200
+        else:
+            return jsonify({'error': 'Usuario no encontrado'}), 404
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return jsonify({'error': 'Error al obtener usuario'}), 500
+
+@app.route('/usuarios/agregar', methods=['POST'])
+@token_required
+def agregar_usuario(current_user):
     try:
         data = request.get_json()
-        activo = bool(data.get('activo'))   # fuerza booleano
-
-        resultado = callMethod.actualizar_activo(idProducto, activo)
+        resultado = callMethod.agregar_usuario(data)
         if resultado['success']:
-            return jsonify({'message': 'Status actualizado'}), 200
+            return jsonify({'message': 'Usuario agregado correctamente'}), 201
         else:
             return jsonify({'error': resultado['error']}), 400
-    except Exception:
+    except Exception as e:
         HelperFunctions.PrintException()
-        return jsonify({'error': 'Error al actualizar status'}), 500
+        return jsonify({'error': 'Error al agregar usuario'}), 500
 
+@app.route('/usuarios/actualizar/<int:idUsuario>', methods=['PUT'])
+@token_required
+def actualizar_usuario(current_user, idUsuario):
+    try:
+        data = request.get_json()
+        resultado = callMethod.actualizar_usuario(idUsuario, data)
+        if resultado['success']:
+            return jsonify({'message': 'Usuario actualizado correctamente'}), 200
+        else:
+            return jsonify({'error': resultado['error']}), 400
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return jsonify({'error': 'Error al actualizar usuario'}), 500
+
+@app.route('/usuarios/eliminar/<int:idUsuario>', methods=['DELETE'])
+@token_required
+def eliminar_usuario(current_user, idUsuario):
+    try:
+        resultado = callMethod.eliminar_usuario(idUsuario)
+        if resultado['success']:
+            return jsonify({'message': 'Usuario eliminado correctamente'}), 200
+        else:
+            return jsonify({'error': resultado['error']}), 404
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return jsonify({'error': 'Error al eliminar usuario'}), 500
+
+# ------------------- MAIN -------------------
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
-
-

@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="filters">
+    <ion-select placeholder="Filtrar por estado">
+      <ion-select-option value="all">Todas</ion-select-option>
+      <ion-select-option value="pending">Pendiente</ion-select-option>
+      <ion-select-option value="doing">En progreso</ion-select-option>
+      <ion-select-option value="done">Completadas</ion-select-option>
+    </ion-select>
+
+    <ion-select placeholder="Filtrar por prioridad">
+      <ion-select-option value="low">Baja</ion-select-option>
+      <ion-select-option value="medium">Media</ion-select-option>
+      <ion-select-option value="high">Alta</ion-select-option>
+    </ion-select>
+
+    <ion-button color="dark">Nueva</ion-button>
+  </div>
+
+  <div class="task-list">
+    <ion-card *ngFor="let task of tasks">
+      <ion-card-header>
+        <ion-card-title>{{ task.titulo }}</ion-card-title>
+        <ion-card-subtitle>{{ task.descripcion }}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="task-meta">
+          <span class="priority" [ngClass]="task.prioridad">{{ task.prioridad }}</span>
+          <span class="estado">{{ task.estado }}</span>
+          <span class="fecha">vence {{ task.fechaEntrega | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <ion-button expand="block" fill="outline" size="small">Abrir</ion-button>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

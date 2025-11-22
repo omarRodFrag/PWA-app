@@ -1,66 +1,41 @@
-from flask import Flask, jsonify, request, Response
+from flask import jsonify, request
 from bson import ObjectId
 from functools import wraps
 import Backend.GlobalInfo.Helpers as HelperFunctions
-
 import Backend.GlobalInfo.Messages as ResponseMessage
-
 import bcrypt
-import re
-from flask_mail import Message
-import json
-import sys
-import copy
-import random
-from flask_mail import Mail
 import jwt
+import random
+import datetime
+from flask_mail import Message, Mail
 import Backend.GlobalInfo.keys as BaseDatos
+from Backend.GlobalInfo.keys import JWT_SECRET_KEY
 from pymongo import MongoClient
 
-import datetime
-from Backend.GlobalInfo.keys import JWT_SECRET_KEY
-
-
-# Connection to database
-if BaseDatos.dbconn == None:
+# ------------------- CONEXIÓN A MONGO -------------------
+if BaseDatos.dbconn is None:
     mongoConnect = MongoClient(BaseDatos.strConnection)
     BaseDatos.dbconn = mongoConnect[BaseDatos.strDBConnection]
-    dbConnLocal = BaseDatos.dbconn
 
+dbConnLocal = BaseDatos.dbconn
 mail = Mail()
-from pymongo import MongoClient
-import Backend.GlobalInfo.keys as BaseDatos
 
-# Conexión a MongoDB
 try:
-    mongoConnect = MongoClient(BaseDatos.strConnection)
-    dbConnLocal = mongoConnect[BaseDatos.strDBConnection]
-    print("Conexión exitosa a MongoDB Atlas")
-    
-    # Prueba una simple consulta
-    test_collection = dbConnLocal.clUsuarios.find_one()
-    if test_collection:
-        print("Conexión verificada, datos obtenidos.")
-    else:
-        print("Conexión exitosa, pero no se encontraron datos.")
-    
+    test = dbConnLocal.clUsuarios.find_one()
+    print("Conexión a MongoDB exitosa")
 except Exception as e:
-    print("Error de conexión a MongoDB Atlas:", e)
+    print("Error de conexión a MongoDB:", e)
 
+# ------------------- DECORADOR TOKEN -------------------
 def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         token = None
-        
-        # Verificar si el token está en los encabezados
         if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(" ")[1]  # Obtener el token de los encabezados
-        
+            token = request.headers['Authorization'].split(" ")[1]
         if not token:
             return jsonify({'message': 'Token es requerido'}), 403
-        
         try:
-            # Verificar y decodificar el token
             decoded_token = jwt.decode(token, JWT_SECRET_KEY, algorithms=['HS256'])
             current_user = dbConnLocal.clUsuarios.find_one({"idUsuario": decoded_token['idUsuario']})
             if not current_user:
@@ -69,202 +44,31 @@ def token_required(f):
             return jsonify({'message': 'Token ha expirado'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Token inválido'}), 401
-        
         return f(current_user, *args, **kwargs)
-    
     return decorated_function
 
+# ------------------- LOGIN + MFA -------------------
 def fnLogin(email, password):
     try:
-        # Buscar al usuario en la base de datos (sin comparar la contraseña directamente)
-        jsnInfoUser = dbConnLocal.clUsuarios.find_one({"strEmail": email})
-        
-        if jsnInfoUser is not None:
-            # Verificar la contraseña con bcrypt
-            hashed_password = jsnInfoUser.get('strPassword', '')
+        user = dbConnLocal.clUsuarios.find_one({"strEmail": email})
+        if user and bcrypt.checkpw(password.encode('utf-8'), user.get('strPassword','').encode('utf-8')):
+            expiration_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+            payload = {'idUsuario': user['idUsuario'], 'exp': expiration_time}
+            token = jwt.encode(payload, JWT_SECRET_KEY, algorithm='HS256')
 
-            if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')): 
-                # Generar el JWT
-                expiration_time = datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Token expira en 1 hora
-                payload = {
-                    'idUsuario': jsnInfoUser['idUsuario'],
-                    'exp': expiration_time  # Fecha de expiración del token
-                }
-                token = jwt.encode(payload, JWT_SECRET_KEY, algorithm='HS256')  # Firmamos el token con la clave secreta
-                
-                # Generar un código de verificación aleatorio
-                verification_code = random.randint(100000, 999999)
+            verification_code = random.randint(100000, 999999)
+            dbConnLocal.clUsuarios.update_one({"strEmail": email}, {"$set": {"verification_code": verification_code}})
 
-                # Almacenar el código de verificación en la base de datos
-                dbConnLocal.clUsuarios.update_one(
-                    {"strEmail": email},
-                    {"$set": {"verification_code": verification_code}}
-                )
-
-                # Enviar el código de verificación por correo electrónico
-                email_sent = send_verification_email(jsnInfoUser['strEmail'], verification_code)
-                if email_sent:
-                    return {
-                                'intResponse': 200,
-                                'message': 'Código de verificación enviado al correo.',
-                                'token': token
-                            }
-                else:
-                    return {'intResponse': 500, 'Result': {'error': 'No se pudo enviar el correo de verificación.'}}
+            if send_verification_email(user['strEmail'], verification_code):
+                return {'intResponse': 200, 'message': 'Código de verificación enviado', 'token': token}
             else:
-                return {'intResponse': 203, 'Result': {'usuario': {}, 'error': 'Usuario o contraseña incorrecta'}}  # Contraseña incorrecta
+                return {'intResponse': 500, 'Result': {'error': 'No se pudo enviar correo'}}
         else:
-            return {'intResponse': 203, 'Result': {'usuario': {}, 'error': 'Usuario no encontrado'}}  # Usuario no encontrado
-    except Exception as exception:
-        print('fnLogin', exception)
-        return {'intResponse': 500}  # Error interno del servidor
-
-
-# Función para obtener todos los productos
-def obtener_productos():
-    try:
-        productos = list(dbConnLocal.clProductos.find({}))
-
-        productos = [{
-            "_id": str(p["_id"]),
-            "idProducto": p.get("idProducto"),
-            "nombre": p.get("nombre"),
-            "descripcion": p.get("descripcion"),
-            "categoria": p.get("categoria"),
-            "cantidad": p.get("cantidad"),
-            "stockMinimo": p.get("stockMinimo"),
-            "activo": p.get("activo"),
-            "fechaRegistro": p.get("fechaRegistro"),
-            "ultimaActualizacion": p.get("ultimaActualizacion"),
-        } for p in productos]
-
-        return productos
+            return {'intResponse': 203, 'Result': {'usuario': {}, 'error': 'Usuario o contraseña incorrecta'}}
     except Exception as e:
-        HelperFunctions.PrintException()
-        return []
+        print('fnLogin', e)
+        return {'intResponse': 500}
 
-
-
-
-# Función para obtener un producto específico por ID
-def obtener_producto(idProducto):
-    try:
-        producto = dbConnLocal.clProductos.find_one({"idProducto": idProducto})
-        if producto:
-            return {
-                "_id": str(producto["_id"]),
-                "idProducto": producto.get("idProducto"),
-                "nombre": producto.get("nombre"),
-                "descripcion": producto.get("descripcion"),
-                "categoria": producto.get("categoria"),
-                "cantidad": producto.get("cantidad"),
-                "stockMinimo": producto.get("stockMinimo"),
-                "activo": producto.get("activo"),
-                "fechaRegistro": producto.get("fechaRegistro"),
-                "ultimaActualizacion": producto.get("ultimaActualizacion")
-            }
-        return None
-    except Exception as e:
-        HelperFunctions.PrintException()
-        return None
-
-
-
-# Función para agregar un producto
-def agregar_producto(data):
-    try:
-        # Obtener el mayor idProducto existente
-        max_id = list(dbConnLocal.clProductos.aggregate([
-            {"$group": {"_id": None, "maxId": {"$max": "$idProducto"}}}
-        ]))
-        nuevo_id = 1 if not max_id else max_id[0]['maxId'] + 1
-
-        # Preparar documento
-        nuevo_producto = {
-            "idProducto": nuevo_id,
-            "nombre": data.get("nombre"),
-            "descripcion": data.get("descripcion"),
-            "categoria": data.get("categoria"),
-            "cantidad": data.get("cantidad", 0),
-            "stockMinimo": data.get("stockMinimo", 1),
-            "activo": True,
-            "fechaRegistro": datetime.datetime.utcnow(),
-            "ultimaActualizacion": datetime.datetime.utcnow(),
-        }
-
-        # Insertar en la colección
-        dbConnLocal.clProductos.insert_one(nuevo_producto)
-
-        return {'success': True}
-    except Exception as e:
-        HelperFunctions.PrintException()
-        return {'success': False, 'error': 'No se pudo agregar el producto'}
-
-
-
-def actualizar_producto(idProducto, data):
-    try:
-        producto = dbConnLocal.clProductos.find_one({"idProducto": idProducto})
-        if not producto:
-            return {'success': False, 'error': 'Producto no encontrado'}
-
-        # Actualización dinámica
-        data['ultimaActualizacion'] = datetime.datetime.utcnow()
-
-        result = dbConnLocal.clProductos.update_one(
-            {"idProducto": idProducto},
-            {"$set": data}
-        )
-
-        if result.modified_count > 0:
-            return {'success': True}
-        else:
-            return {'success': False, 'error': 'No se realizaron cambios'}
-    except Exception as e:
-        HelperFunctions.PrintException()
-        return {'success': False, 'error': 'Error al actualizar producto'}
-    
-def ajustar_stock(idProducto, cantidad):
-    try:
-        producto = dbConnLocal.clProductos.find_one({"idProducto": idProducto})
-        if not producto:
-            return {'success': False, 'error': 'Producto no encontrado'}
-
-        nuevo_stock = producto.get('cantidad', 0) + cantidad
-
-        if nuevo_stock < 0:
-            return {'success': False, 'error': 'No hay suficiente stock para realizar esta operación'}
-
-        dbConnLocal.clProductos.update_one(
-            {"idProducto": idProducto},
-            {
-                "$set": {
-                    "cantidad": nuevo_stock,
-                    "ultimaActualizacion": datetime.datetime.utcnow()
-                }
-            }
-        )
-        return {'success': True}
-    except Exception as e:
-        HelperFunctions.PrintException()
-        return {'success': False, 'error': 'Error al ajustar stock'}
-    
-
-def eliminar_producto(idProducto):
-    try:
-        resultado = dbConnLocal.clProductos.delete_one({"idProducto": idProducto})
-
-        if resultado.deleted_count > 0:
-            return {'success': True}
-        else:
-            return {'success': False, 'error': 'Producto no encontrado'}
-    except Exception as e:
-        HelperFunctions.PrintException()
-        return {'success': False, 'error': 'Error al eliminar producto'}
-
-
-
-# Función para enviar el correo de verificación
 def send_verification_email(email, code):
     try:
         msg = Message('Código de Verificación', recipients=[email])
@@ -275,24 +79,165 @@ def send_verification_email(email, code):
         print(f"Error al enviar correo: {e}")
         return False
 
-
-
-
-def actualizar_activo(idProducto, activo):
+# ------------------- USUARIOS -------------------
+def obtener_usuarios():
     try:
-        res = dbConnLocal.clProductos.update_one(
-            {"idProducto": idProducto},
-            {"$set": {
-                "activo": activo,
-                "ultimaActualizacion": datetime.datetime.utcnow()
-            }}
-        )
-        return {'success': res.modified_count > 0}
-    except Exception:
+        usuarios = list(dbConnLocal.clUsuarios.find({}))
+        return [{
+            "_id": str(u["_id"]),
+            "idUsuario": u.get("idUsuario"),
+            "strEmail": u.get("strEmail"),
+            "strNombre": u.get("strNombre"),
+            "rol": u.get("rol"),
+            "fechaRegistro": u.get("fechaRegistro"),
+            "ultimaActualizacion": u.get("ultimaActualizacion")
+        } for u in usuarios]
+    except Exception as e:
         HelperFunctions.PrintException()
-        return {'success': False, 'error': 'Error al actualizar status'}
-    
-    
+        return []
 
+def obtener_usuario(idUsuario):
+    try:
+        u = dbConnLocal.clUsuarios.find_one({"idUsuario": idUsuario})
+        if u:
+            return {
+                "_id": str(u["_id"]),
+                "idUsuario": u.get("idUsuario"),
+                "strEmail": u.get("strEmail"),
+                "strNombre": u.get("strNombre"),
+                "rol": u.get("rol"),
+                "fechaRegistro": u.get("fechaRegistro"),
+                "ultimaActualizacion": u.get("ultimaActualizacion")
+            }
+        return None
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return None
 
+def agregar_usuario(data):
+    try:
+        max_id = list(dbConnLocal.clUsuarios.aggregate([{"$group": {"_id": None, "maxId": {"$max": "$idUsuario"}}}]))
+        nuevo_id = 1 if not max_id else max_id[0]['maxId'] + 1
 
+        hashed_password = bcrypt.hashpw(data.get('strPassword','').encode('utf-8'), bcrypt.gensalt())
+        nuevo_usuario = {
+            "idUsuario": nuevo_id,
+            "strEmail": data.get("strEmail"),
+            "strPassword": hashed_password.decode('utf-8'),
+            "strNombre": data.get("strNombre"),
+            "rol": data.get("rol","alumno"),
+            "fechaRegistro": datetime.datetime.utcnow(),
+            "ultimaActualizacion": datetime.datetime.utcnow()
+        }
+        dbConnLocal.clUsuarios.insert_one(nuevo_usuario)
+        return {'success': True}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'success': False, 'error': 'No se pudo agregar usuario'}
+
+def actualizar_usuario(idUsuario, data):
+    try:
+        u = dbConnLocal.clUsuarios.find_one({"idUsuario": idUsuario})
+        if not u:
+            return {'success': False, 'error': 'Usuario no encontrado'}
+        data['ultimaActualizacion'] = datetime.datetime.utcnow()
+        if 'strPassword' in data:
+            data['strPassword'] = bcrypt.hashpw(data['strPassword'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        res = dbConnLocal.clUsuarios.update_one({"idUsuario": idUsuario}, {"$set": data})
+        return {'success': res.modified_count > 0}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'success': False, 'error': 'Error al actualizar usuario'}
+
+def eliminar_usuario(idUsuario):
+    try:
+        res = dbConnLocal.clUsuarios.delete_one({"idUsuario": idUsuario})
+        return {'success': res.deleted_count > 0}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'success': False, 'error': 'Error al eliminar usuario'}
+
+# ------------------- TAREAS -------------------
+def obtener_tareas():
+    try:
+        tareas = list(dbConnLocal.clTasks.find({}))
+        return [{
+            "_id": str(t["_id"]),
+            "idTarea": t.get("idTarea"),
+            "titulo": t.get("titulo"),
+            "descripcion": t.get("descripcion"),
+            "fechaEntrega": t.get("fechaEntrega"),
+            "prioridad": t.get("prioridad"),
+            "estado": t.get("estado"),
+            "usuarioAsignado": t.get("usuarioAsignado"),
+            "creador": t.get("creador"),
+            "fechaRegistro": t.get("fechaRegistro"),
+            "ultimaActualizacion": t.get("ultimaActualizacion")
+        } for t in tareas]
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return []
+
+def obtener_tarea(idTarea):
+    try:
+        t = dbConnLocal.clTasks.find_one({"idTarea": idTarea})
+        if t:
+            return {
+                "_id": str(t["_id"]),
+                "idTarea": t.get("idTarea"),
+                "titulo": t.get("titulo"),
+                "descripcion": t.get("descripcion"),
+                "fechaEntrega": t.get("fechaEntrega"),
+                "prioridad": t.get("prioridad"),
+                "estado": t.get("estado"),
+                "usuarioAsignado": t.get("usuarioAsignado"),
+                "creador": t.get("creador"),
+                "fechaRegistro": t.get("fechaRegistro"),
+                "ultimaActualizacion": t.get("ultimaActualizacion")
+            }
+        return None
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return None
+
+def agregar_tarea(data):
+    try:
+        max_id = list(dbConnLocal.clTasks.aggregate([{"$group": {"_id": None, "maxId": {"$max": "$idTarea"}}}]))
+        nuevo_id = 1 if not max_id else max_id[0]['maxId'] + 1
+        nueva_tarea = {
+            "idTarea": nuevo_id,
+            "titulo": data.get("titulo"),
+            "descripcion": data.get("descripcion"),
+            "fechaEntrega": data.get("fechaEntrega"),
+            "prioridad": data.get("prioridad","media"),
+            "estado": data.get("estado","pendiente"),
+            "usuarioAsignado": data.get("usuarioAsignado"),
+            "creador": data.get("creador"),
+            "fechaRegistro": datetime.datetime.utcnow(),
+            "ultimaActualizacion": datetime.datetime.utcnow()
+        }
+        dbConnLocal.clTasks.insert_one(nueva_tarea)
+        return {'success': True}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'success': False, 'error': 'No se pudo agregar tarea'}
+
+def actualizar_tarea(idTarea, data):
+    try:
+        t = dbConnLocal.clTasks.find_one({"idTarea": idTarea})
+        if not t:
+            return {'success': False, 'error': 'Tarea no encontrada'}
+        data['ultimaActualizacion'] = datetime.datetime.utcnow()
+        res = dbConnLocal.clTasks.update_one({"idTarea": idTarea}, {"$set": data})
+        return {'success': res.modified_count > 0}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'success': False, 'error': 'Error al actualizar tarea'}
+
+def eliminar_tarea(idTarea):
+    try:
+        res = dbConnLocal.clTasks.delete_one({"idTarea": idTarea})
+        return {'success': res.deleted_count > 0}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'success': False, 'error': 'Error al eliminar tarea'}

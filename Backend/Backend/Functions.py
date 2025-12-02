@@ -114,6 +114,41 @@ def obtener_usuario(idUsuario):
         HelperFunctions.PrintException()
         return None
 
+def fnRegister(email, password, nombre):
+    """Registro público de usuario - valida email único y crea usuario con rol alumno"""
+    try:
+        # Validar que el email no exista
+        existing_user = dbConnLocal.clUsuarios.find_one({"strEmail": email})
+        if existing_user:
+            return {'intResponse': 400, 'error': 'El correo electrónico ya está registrado'}
+        
+        # Validar que los campos requeridos estén presentes
+        if not email or not password or not nombre:
+            return {'intResponse': 400, 'error': 'Todos los campos son requeridos'}
+        
+        # Generar nuevo ID
+        max_id = list(dbConnLocal.clUsuarios.aggregate([{"$group": {"_id": None, "maxId": {"$max": "$idUsuario"}}}]))
+        nuevo_id = 1 if not max_id else max_id[0]['maxId'] + 1
+
+        # Hash de contraseña
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        
+        # Crear nuevo usuario con rol "alumno" por defecto
+        nuevo_usuario = {
+            "idUsuario": nuevo_id,
+            "strEmail": email,
+            "strPassword": hashed_password.decode('utf-8'),
+            "strNombre": nombre,
+            "rol": "alumno",  # Siempre alumno para registro público
+            "fechaRegistro": datetime.datetime.utcnow(),
+            "ultimaActualizacion": datetime.datetime.utcnow()
+        }
+        dbConnLocal.clUsuarios.insert_one(nuevo_usuario)
+        return {'intResponse': 201, 'message': 'Usuario registrado correctamente', 'idUsuario': nuevo_id}
+    except Exception as e:
+        HelperFunctions.PrintException()
+        return {'intResponse': 500, 'error': 'Error al registrar usuario'}
+
 def agregar_usuario(data):
     try:
         max_id = list(dbConnLocal.clUsuarios.aggregate([{"$group": {"_id": None, "maxId": {"$max": "$idUsuario"}}}]))

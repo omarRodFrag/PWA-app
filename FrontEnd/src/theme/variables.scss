@@ -1,2 +1,47 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+
+/** Ionic CSS Variables **/
+:root {
+  /** Primary Color **/
+  --ion-color-primary: #eb6417;
+  --ion-color-primary-rgb: 235, 100, 23;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #cf5713;
+  --ion-color-primary-tint: #ed7430;
+
+  /** Secondary Color **/
+  --ion-color-secondary: #3880ff;
+  --ion-color-secondary-rgb: 56, 128, 255;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #3171e0;
+  --ion-color-secondary-tint: #4c8dff;
+
+  /** Spacing Variables **/
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /** Border Radius **/
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --border-radius-full: 40px;
+
+  /** Shadows **/
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 6px 18px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /** Transitions **/
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s ease;
+}

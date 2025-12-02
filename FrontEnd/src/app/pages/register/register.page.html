@@ -1,0 +1,83 @@
+<ion-content class="ion-padding">
+  <div class="register-wrapper">
+    <div class="form-container">
+      <form [formGroup]="registerForm" (ngSubmit)="register()">
+        <div class="logo-container">
+          <img src="assets/SectionTitleLogin.png" class="section-title" alt="Registro" />
+        </div>
+
+        <h2 class="form-title">Crear Nueva Cuenta</h2>
+
+        <ion-item>
+          <ion-label position="floating">Nombre Completo <span class="required">*</span></ion-label>
+          <ion-input
+            type="text"
+            formControlName="nombre"
+            aria-label="Nombre completo"
+          ></ion-input>
+        </ion-item>
+        <div *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.hasError('required')" class="text-danger">
+          El nombre es obligatorio.
+        </div>
+        <div *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.hasError('minlength')" class="text-danger">
+          El nombre debe tener al menos 2 caracteres.
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Correo Electrónico <span class="required">*</span></ion-label>
+          <ion-input
+            type="email"
+            formControlName="email"
+            aria-label="Correo electrónico"
+          ></ion-input>
+        </ion-item>
+        <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')" class="text-danger">
+          El correo es obligatorio.
+        </div>
+        <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')" class="text-danger">
+          Por favor, ingresa un correo válido.
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Contraseña <span class="required">*</span></ion-label>
+          <ion-input
+            type="password"
+            formControlName="password"
+            aria-label="Contraseña"
+          ></ion-input>
+        </ion-item>
+        <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.hasError('required')" class="text-danger">
+          La contraseña es obligatoria.
+        </div>
+        <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.hasError('minlength')" class="text-danger">
+          La contraseña debe tener al menos 6 caracteres.
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Confirmar Contraseña <span class="required">*</span></ion-label>
+          <ion-input
+            type="password"
+            formControlName="confirmPassword"
+            aria-label="Confirmar contraseña"
+          ></ion-input>
+        </ion-item>
+        <div *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('required')" class="text-danger">
+          Confirma tu contraseña.
+        </div>
+        <div *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('passwordMismatch')" class="text-danger">
+          Las contraseñas no coinciden.
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="registerForm.invalid || isLoading">
+          <ng-container *ngIf="!isLoading">Registrarse</ng-container>
+          <ng-container *ngIf="isLoading">Registrando...</ng-container>
+        </ion-button>
+
+        <div class="login-link">
+          <p>¿Ya tienes una cuenta? <a (click)="goToLogin()">Inicia sesión</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>
+

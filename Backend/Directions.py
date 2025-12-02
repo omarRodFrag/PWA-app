@@ -61,6 +61,23 @@ def verify_code(current_user):
         print(str(e))
         return jsonify({'message': 'Error al verificar el código'}), 500
 
+# ------------------- REGISTRO PÚBLICO -------------------
+
+@app.route('/register', methods=['POST'])
+def register():
+    """Endpoint público para registro de nuevos usuarios"""
+    try:
+        data = request.get_json()
+        email = data.get('strEmail')
+        password = data.get('strPassword')
+        nombre = data.get('strNombre')
+        
+        response = callMethod.fnRegister(email, password, nombre)
+        return jsonify(response), response['intResponse']
+    except Exception as e:
+        print(str(e))
+        return jsonify({'error': 'Error en la petición de registro'}), 400
+
 # ------------------- TAREAS -------------------
 
 @app.route('/tasks', methods=['GET'])

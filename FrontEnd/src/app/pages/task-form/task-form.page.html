@@ -1,13 +1,100 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>task-form</ion-title>
-  </ion-toolbar>
+<ion-header>
+  <app-navbar></app-navbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">task-form</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="page-bg" fullscreen>
+  <div class="form-container ion-padding">
+    <div *ngIf="loadingTask" class="loading-box">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" *ngIf="!loadingTask">
+      <ion-item>
+        <ion-label position="floating">Título <span class="required">*</span></ion-label>
+        <ion-input
+          type="text"
+          formControlName="titulo"
+          placeholder="Ingresa el título de la tarea"
+        ></ion-input>
+      </ion-item>
+      <div *ngIf="taskForm.get('titulo')?.touched && taskForm.get('titulo')?.hasError('required')" class="text-danger">
+        El título es obligatorio.
+      </div>
+
+      <ion-item>
+        <ion-label position="floating">Descripción</ion-label>
+        <ion-textarea
+          formControlName="descripcion"
+          placeholder="Descripción de la tarea (opcional)"
+          rows="4"
+        ></ion-textarea>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Fecha de Entrega</ion-label>
+        <ion-input
+          type="date"
+          formControlName="fechaEntrega"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Prioridad <span class="required">*</span></ion-label>
+        <ion-select formControlName="prioridad">
+          <ion-select-option value="low">Baja</ion-select-option>
+          <ion-select-option value="med">Media</ion-select-option>
+          <ion-select-option value="high">Alta</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Estado <span class="required">*</span></ion-label>
+        <ion-select formControlName="estado">
+          <ion-select-option value="todo">Pendiente</ion-select-option>
+          <ion-select-option value="doing">En progreso</ion-select-option>
+          <ion-select-option value="done">Completada</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item *ngIf="isAdmin">
+        <ion-label position="floating">Asignar a Usuario</ion-label>
+        <ion-select formControlName="usuarioAsignado" [disabled]="loadingUsers">
+          <ion-select-option [value]="null">Seleccionar usuario...</ion-select-option>
+          <ion-select-option *ngFor="let user of users" [value]="user.idUsuario">
+            {{ user.strNombre || user.strEmail }} ({{ user.rol === 'administrador' ? 'Admin' : 'Alumno' }})
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <div *ngIf="isAdmin && loadingUsers" class="text-info" style="padding-left: 16px; font-size: 12px; color: #666;">
+        Cargando usuarios...
+      </div>
+
+      <div class="button-group">
+        <ion-button
+          expand="block"
+          type="submit"
+          [disabled]="taskForm.invalid || loading"
+          class="submit-button"
+        >
+          <ng-container *ngIf="!loading">
+            {{ isEditMode ? 'Actualizar' : 'Crear' }}
+          </ng-container>
+          <ng-container *ngIf="loading">
+            <ion-spinner name="crescent" size="small"></ion-spinner>
+            <span style="margin-left: 8px;">Guardando...</span>
+          </ng-container>
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          type="button"
+          (click)="cancel()"
+          [disabled]="loading"
+        >
+          Cancelar
+        </ion-button>
+      </div>
+    </form>
+  </div>
 </ion-content>

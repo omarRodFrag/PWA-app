@@ -1,42 +1,94 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>Dashboard</ion-title>
-  </ion-toolbar>
+  <app-navbar></app-navbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="filters">
-    <ion-select placeholder="Filtrar por estado">
-      <ion-select-option value="all">Todas</ion-select-option>
-      <ion-select-option value="pending">Pendiente</ion-select-option>
-      <ion-select-option value="doing">En progreso</ion-select-option>
-      <ion-select-option value="done">Completadas</ion-select-option>
-    </ion-select>
+<ion-content class="page-bg" fullscreen>
+  <div class="dashboard-root ion-padding">
+    <!-- Notificaciones de tareas próximas -->
+    <div *ngIf="hasNotifications && !loading" class="notifications-container">
+      <ion-card class="notification-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="notifications-outline"></ion-icon>
+            Tareas Próximas a Vencer
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="notifications-list">
+            <div *ngFor="let notif of notifications" 
+                 class="notification-item" 
+                 [ngClass]="{'urgent': notif.isUrgent, 'warning': !notif.isUrgent && notif.daysUntilDue <= 3}"
+                 (click)="abrirTarea(notif.task)">
+              <div class="notification-content">
+                <div class="notification-title">{{ notif.task.titulo }}</div>
+                <div class="notification-message">{{ notif.message }}</div>
+              </div>
+              <ion-icon [name]="notif.isUrgent ? 'alert-circle' : 'time-outline'" 
+                        [class.urgent-icon]="notif.isUrgent"></ion-icon>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
 
-    <ion-select placeholder="Filtrar por prioridad">
-      <ion-select-option value="low">Baja</ion-select-option>
-      <ion-select-option value="medium">Media</ion-select-option>
-      <ion-select-option value="high">Alta</ion-select-option>
-    </ion-select>
+    <!-- filtros -->
+    <div class="filters">
+      <ion-select placeholder="Estado" [(ngModel)]="estadoFiltro">
+        <ion-select-option value="all">Todas</ion-select-option>
+        <ion-select-option value="todo">Pendiente</ion-select-option>
+        <ion-select-option value="doing">En progreso</ion-select-option>
+        <ion-select-option value="done">Completadas</ion-select-option>
+      </ion-select>
 
-    <ion-button color="dark">Nueva</ion-button>
-  </div>
+      <ion-select placeholder="Prioridad" [(ngModel)]="prioridadFiltro">
+        <ion-select-option value="all">Todas</ion-select-option>
+        <ion-select-option value="low">Baja</ion-select-option>
+        <ion-select-option value="med">Media</ion-select-option>
+        <ion-select-option value="high">Alta</ion-select-option>
+      </ion-select>
 
-  <div class="task-list">
-    <ion-card *ngFor="let task of tasks">
-      <ion-card-header>
-        <ion-card-title>{{ task.titulo }}</ion-card-title>
-        <ion-card-subtitle>{{ task.descripcion }}</ion-card-subtitle>
-      </ion-card-header>
+      <ion-searchbar [(ngModel)]="searchTerm" placeholder="Buscar tarea"></ion-searchbar>
 
-      <ion-card-content>
-        <div class="task-meta">
-          <span class="priority" [ngClass]="task.prioridad">{{ task.prioridad }}</span>
-          <span class="estado">{{ task.estado }}</span>
-          <span class="fecha">vence {{ task.fechaEntrega | date:'dd/MM/yyyy' }}</span>
-        </div>
-        <ion-button expand="block" fill="outline" size="small">Abrir</ion-button>
-      </ion-card-content>
-    </ion-card>
+      <ion-button color="dark" (click)="nuevaTarea()">Nueva</ion-button>
+      
+      <ion-button *ngIf="isAdmin" color="tertiary" routerLink="/reports" routerDirection="forward">
+        <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
+        Reportes
+      </ion-button>
+    </div>
+
+    <!-- contenido -->
+    <div *ngIf="loading" class="loading-box">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <div class="task-list">
+      <ion-card *ngFor="let t of tareasFiltradas()" class="task-card">
+        <ion-card-content>
+          <div class="row-top">
+            <div class="title">{{ t.titulo }}</div>
+            <ion-button fill="outline" size="small" (click)="abrirTarea(t)">Abrir</ion-button>
+          </div>
+
+          <div class="desc">{{ t.descripcion }}</div>
+
+          <div class="meta-row">
+            <div class="pill priority" [ngClass]="t.prioridad">{{ t.prioridad }}</div>
+            <div class="pill estado">{{ t.estado }}</div>
+            <div class="pill fecha">vence {{ t.fechaEntrega | date:'dd/MM/yyyy' }}</div>
+          </div>
+
+          <div class="row-actions">
+            <ion-button size="small" fill="clear" (click)="toggleEstado(t)">
+              <ion-icon slot="icon-only" name="checkmark-done-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div *ngIf="!loading && tareasFiltradas().length === 0" class="empty">
+        No se encontraron tareas con esos filtros.
+      </div>
+    </div>
   </div>
 </ion-content>

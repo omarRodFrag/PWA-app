@@ -1,13 +1,80 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>task-detail</ion-title>
-  </ion-toolbar>
+<ion-header>
+  <app-navbar></app-navbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">task-detail</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="page-bg" fullscreen>
+  <div class="detail-container ion-padding">
+    <div *ngIf="loading" class="loading-box">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <div *ngIf="!loading && task" class="task-detail">
+      <ion-card class="detail-card">
+        <ion-card-content>
+          <div class="task-header">
+            <h1 class="task-title">{{ task.titulo }}</h1>
+          </div>
+
+          <div class="task-description" *ngIf="task.descripcion">
+            <p>{{ task.descripcion }}</p>
+          </div>
+
+          <div class="task-meta">
+            <div class="meta-item">
+              <span class="meta-label">Prioridad:</span>
+              <span class="pill priority" [ngClass]="getPrioridadColor(task.prioridad)">
+                {{ task.prioridad === 'low' ? 'Baja' : task.prioridad === 'med' ? 'Media' : 'Alta' }}
+              </span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-label">Estado:</span>
+              <span class="pill estado">{{ task.estado === 'todo' ? 'Pendiente' : task.estado === 'doing' ? 'En progreso' : 'Completada' }}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="meta-label">Fecha de Entrega:</span>
+              <span class="meta-value">{{ formatDate(task.fechaEntrega) }}</span>
+            </div>
+
+            <div class="meta-item" *ngIf="task.fechaRegistro">
+              <span class="meta-label">Fecha de Registro:</span>
+              <span class="meta-value">{{ formatDate(task.fechaRegistro) }}</span>
+            </div>
+
+            <div class="meta-item" *ngIf="task.ultimaActualizacion">
+              <span class="meta-label">Última Actualización:</span>
+              <span class="meta-value">{{ formatDate(task.ultimaActualizacion) }}</span>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="action-buttons">
+        <ion-button
+          expand="block"
+          (click)="editTask()"
+          class="edit-button"
+        >
+          <ion-icon name="create-outline" slot="start"></ion-icon>
+          Editar
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="danger"
+          (click)="deleteTask()"
+          class="delete-button"
+        >
+          <ion-icon name="trash-outline" slot="start"></ion-icon>
+          Eliminar
+        </ion-button>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !task" class="empty">
+      <p>No se pudo cargar la tarea.</p>
+    </div>
+  </div>
 </ion-content>

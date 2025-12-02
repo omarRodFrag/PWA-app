@@ -1,13 +1,69 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>profile</ion-title>
-  </ion-toolbar>
+<ion-header>
+  <app-navbar></app-navbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">profile</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="page-bg" fullscreen>
+  <div class="profile-container ion-padding">
+    <div *ngIf="loading" class="loading-box">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <div *ngIf="!loading && user" class="profile-content">
+      <ion-card class="profile-card">
+        <ion-card-content>
+          <div class="profile-header">
+            <div class="avatar">
+              <ion-icon name="person-circle-outline"></ion-icon>
+            </div>
+            <h2 class="user-name">{{ user.strNombre || 'Usuario' }}</h2>
+            <span class="pill rol" [ngClass]="getRolColor(user.rol)">
+              {{ getRolLabel(user.rol) }}
+            </span>
+          </div>
+
+          <div class="profile-info">
+            <div class="info-item">
+              <ion-icon name="mail-outline" class="info-icon"></ion-icon>
+              <div class="info-content">
+                <span class="info-label">Correo Electrónico</span>
+                <span class="info-value">{{ user.strEmail }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="user.fechaRegistro">
+              <ion-icon name="calendar-outline" class="info-icon"></ion-icon>
+              <div class="info-content">
+                <span class="info-label">Fecha de Registro</span>
+                <span class="info-value">{{ formatDate(user.fechaRegistro) }}</span>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="user.ultimaActualizacion">
+              <ion-icon name="time-outline" class="info-icon"></ion-icon>
+              <div class="info-content">
+                <span class="info-label">Última Actualización</span>
+                <span class="info-value">{{ formatDate(user.ultimaActualizacion) }}</span>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <div class="action-buttons">
+        <ion-button
+          expand="block"
+          color="danger"
+          (click)="logout()"
+          class="logout-button"
+        >
+          <ion-icon name="log-out-outline" slot="start"></ion-icon>
+          Cerrar Sesión
+        </ion-button>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !user" class="empty">
+      <p>No se pudo cargar la información del perfil.</p>
+    </div>
+  </div>
 </ion-content>

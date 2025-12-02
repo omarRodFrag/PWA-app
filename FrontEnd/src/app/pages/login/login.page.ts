@@ -130,6 +130,9 @@ export class LoginPage implements OnInit {
           localStorage.setItem(this.authTokenKey, tempToken);
           localStorage.removeItem(this.tempTokenKey);
 
+          // Cargar información del usuario (incluyendo rol)
+          this.authService.loadCurrentUser();
+
           await this.presentToast('Código verificado correctamente', 'success', 1500);
 
           // Navegar a la app (ajusta la ruta)
@@ -148,5 +151,9 @@ export class LoginPage implements OnInit {
         await this.presentToast(mensaje, 'danger', 2200);
       }
     });
+  }
+
+  goToRegister() {
+    this.router.navigate(['/register']);
   }
 }

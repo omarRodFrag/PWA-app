@@ -5,6 +5,7 @@
     {
       "name": "app",
       "installMode": "prefetch",
+      "updateMode": "prefetch",
       "resources": {
         "files": [
           "/favicon.ico",
@@ -24,6 +25,43 @@
         "files": [
           "/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
         ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-tasks",
+      "urls": [
+        "http://localhost:5000/tasks/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxAge": "1h",
+        "timeout": "10s",
+        "maxEntries": 100
+      }
+    },
+    {
+      "name": "api-users",
+      "urls": [
+        "http://localhost:5000/usuarios/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxAge": "30m",
+        "timeout": "10s",
+        "maxEntries": 50
+      }
+    },
+    {
+      "name": "api-auth",
+      "urls": [
+        "http://localhost:5000/login",
+        "http://localhost:5000/verify",
+        "http://localhost:5000/register"
+      ],
+      "cacheConfig": {
+        "strategy": "networkOnly"
       }
     }
   ]

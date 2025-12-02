@@ -29,6 +29,26 @@
                 "glob": "**/*.svg",
                 "input": "node_modules/ionicons/dist/ionicons/svg",
                 "output": "./svg"
+              },
+              {
+                "glob": "manifest.webmanifest",
+                "input": "public",
+                "output": "/"
+              },
+              {
+                "glob": "manifest.webmanifest",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "icon-*.png",
+                "input": "public/icons",
+                "output": "/icons"
+              },
+              {
+                "glob": "icon-*.png",
+                "input": "src/icons",
+                "output": "/icons"
               }
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
@@ -46,8 +66,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "10kb",   
+                  "maximumError": "15kb"       
                 }
               ],
               "fileReplacements": [

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
   <meta charset="utf-8"/>
-  <title>Ionic App</title>
+  <title>Gestor de Tareas</title>
 
   <base href="/"/>
 
@@ -12,11 +12,26 @@
   <meta name="format-detection" content="telephone=no"/>
   <meta name="msapplication-tap-highlight" content="no"/>
 
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#764ba2">
+  <meta name="description" content="Sistema de gestión de tareas con roles de usuario (Admin y Alumno)">
+
   <link rel="icon" type="image/png" href="assets/icon/favicon.png"/>
 
-  <!-- add to homescreen for ios -->
+  <!-- iOS PWA Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Gestor de Tareas"/>
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png"/>
+
+  <!-- Android PWA Support -->
   <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+  
+  <!-- Microsoft Tiles -->
+  <meta name="msapplication-TileColor" content="#764ba2"/>
+  <meta name="msapplication-TileImage" content="icons/icon-144x144.png"/>
+
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>

@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { TaskDetailPageRoutingModule } from './task-detail-routing.module';
 
 import { TaskDetailPage } from './task-detail.page';
+import { NavbarModule } from '../../components/navbar/navbar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    TaskDetailPageRoutingModule
+    TaskDetailPageRoutingModule,
+    NavbarModule
   ],
   declarations: [TaskDetailPage]
 })

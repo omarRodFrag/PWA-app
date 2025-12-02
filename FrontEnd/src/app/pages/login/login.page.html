@@ -64,6 +64,10 @@
           <ng-container *ngIf="!isLoading">Iniciar Sesión</ng-container>
           <ng-container *ngIf="isLoading">Iniciando...</ng-container>
         </ion-button>
+
+        <div class="register-link" *ngIf="!showVerificationForm">
+          <p>¿No tienes una cuenta? <a (click)="goToRegister()">Regístrate</a></p>
+        </div>
       </form>
     </div>
   </div>

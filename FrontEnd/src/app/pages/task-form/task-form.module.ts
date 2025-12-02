@@ -1,19 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
 import { TaskFormPageRoutingModule } from './task-form-routing.module';
 
 import { TaskFormPage } from './task-form.page';
+import { NavbarModule } from '../../components/navbar/navbar.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     IonicModule,
-    TaskFormPageRoutingModule
+    TaskFormPageRoutingModule,
+    NavbarModule
   ],
   declarations: [TaskFormPage]
 })

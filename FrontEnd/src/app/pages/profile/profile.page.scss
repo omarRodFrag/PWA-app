@@ -1,0 +1,256 @@
+.profile-container {
+  max-width: 700px;
+  margin: 0 auto;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.loading-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xxl) 0;
+  min-height: 300px;
+  
+  ion-spinner {
+    --color: var(--color-primary);
+  }
+}
+
+.profile-content {
+  .profile-card {
+    border-radius: var(--radius-lg);
+    --box-shadow: var(--shadow-lg);
+    margin-bottom: var(--spacing-lg);
+    background: var(--color-bg-primary);
+    overflow: hidden;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      z-index: 0;
+    }
+
+    ion-card-content {
+      padding: 0;
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  .profile-header {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-lg);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    margin-bottom: var(--spacing-lg);
+
+    .avatar {
+      font-size: 100px;
+      color: var(--color-primary);
+      margin-bottom: var(--spacing-md);
+      position: relative;
+      display: inline-block;
+      filter: drop-shadow(0 4px 12px rgba(235, 100, 23, 0.3));
+      animation: fadeIn 0.6s ease-out;
+      transition: transform var(--transition-base);
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(235, 100, 23, 0.1) 0%, rgba(235, 100, 23, 0.05) 100%);
+        z-index: -1;
+      }
+    }
+
+    .user-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin: 0 0 var(--spacing-md) 0;
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+
+      &.rol {
+        &.admin {
+          background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+          color: #1976d2;
+          box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+        }
+
+        &.alumno {
+          background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+          color: #7b1fa2;
+          box-shadow: 0 2px 8px rgba(123, 31, 162, 0.2);
+        }
+      }
+    }
+  }
+
+  .profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: 0 var(--spacing-lg) var(--spacing-lg);
+
+    .info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+      padding: var(--spacing-md) var(--spacing-lg);
+      background: linear-gradient(135deg, var(--color-bg-secondary) 0%, rgba(255, 255, 255, 0.8) 100%);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      transition: all var(--transition-base);
+      animation: slideIn 0.4s ease-out;
+      
+      &:hover {
+        transform: translateX(4px);
+        box-shadow: var(--shadow-sm);
+        border-color: var(--color-primary);
+      }
+
+      .info-icon {
+        font-size: 28px;
+        color: var(--color-primary);
+        margin-top: 2px;
+        flex-shrink: 0;
+        filter: drop-shadow(0 2px 4px rgba(235, 100, 23, 0.2));
+      }
+
+      .info-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+
+        .info-label {
+          font-size: 11px;
+          color: var(--color-text-tertiary);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .info-value {
+          font-size: 16px;
+          color: var(--color-text-primary);
+          font-weight: 600;
+          word-break: break-word;
+        }
+      }
+    }
+  }
+}
+
+.action-buttons {
+  margin-top: var(--spacing-lg);
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+
+  .logout-button {
+    --border-radius: var(--radius-full);
+    --background: linear-gradient(135deg, #c62828 0%, #d32f2f 100%);
+    --box-shadow: var(--shadow-md);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-base);
+    
+    &:hover {
+      --box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+    
+    ion-icon {
+      margin-right: var(--spacing-xs);
+    }
+  }
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-tertiary);
+  padding: var(--spacing-xxl) var(--spacing-lg);
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  
+  &::before {
+    content: '👤';
+    font-size: 48px;
+    display: block;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .profile-content {
+    .profile-header {
+      padding: var(--spacing-lg) var(--spacing-md);
+      
+      .avatar {
+        font-size: 80px;
+        
+        &::after {
+          width: 100px;
+          height: 100px;
+        }
+      }
+
+      .user-name {
+        font-size: 24px;
+      }
+    }
+    
+    .profile-info {
+      padding: 0 var(--spacing-md) var(--spacing-md);
+      
+      .info-item {
+        padding: var(--spacing-sm) var(--spacing-md);
+        
+        .info-icon {
+          font-size: 24px;
+        }
+      }
+    }
+  }
+  
+  .action-buttons {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+  }
+}
+

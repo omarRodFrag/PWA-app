@@ -1,3 +1,28 @@
-<p>
-  navbar works!
-</p>
+<ion-toolbar class="navbar-toolbar">
+  <ion-title class="navbar-title">
+    <img src="assets/LogoInventario.png" alt="Logo" class="navbar-logo" />
+    <span class="navbar-title-text">Gestor de Tareas</span>
+  </ion-title>
+  
+  <ion-buttons slot="end" class="navbar-buttons">
+    <ion-button routerLink="/dashboard" routerDirection="root" class="nav-button">
+      <ion-icon name="home-outline" slot="icon-only"></ion-icon>
+      <span class="nav-button-text">Inicio</span>
+    </ion-button>
+    
+    <ion-button routerLink="/task-form" routerDirection="forward" class="nav-button">
+      <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
+      <span class="nav-button-text">Nueva</span>
+    </ion-button>
+    
+    <ion-button *ngIf="isAdmin" routerLink="/reports" routerDirection="forward" class="nav-button">
+      <ion-icon name="bar-chart-outline" slot="icon-only"></ion-icon>
+      <span class="nav-button-text">Reportes</span>
+    </ion-button>
+    
+    <ion-button routerLink="/profile" routerDirection="forward" class="nav-button">
+      <ion-icon name="person-outline" slot="icon-only"></ion-icon>
+      <span class="nav-button-text">Perfil</span>
+    </ion-button>
+  </ion-buttons>
+</ion-toolbar>

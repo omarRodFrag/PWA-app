@@ -1,0 +1,148 @@
+<ion-header>
+  <app-navbar></app-navbar>
+</ion-header>
+
+<ion-content class="page-bg" fullscreen>
+  <div class="reports-container ion-padding">
+    <h1 class="page-title">Reportes de Avance</h1>
+
+    <div *ngIf="loading" class="loading-box">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+
+    <div *ngIf="!loading">
+      <!-- Filtros -->
+      <ion-card class="filters-card">
+        <ion-card-header>
+          <ion-card-title>Filtros</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="filters-grid">
+            <ion-item>
+              <ion-label position="stacked">Usuario</ion-label>
+              <ion-select [(ngModel)]="usuarioFiltro" (ionChange)="aplicarFiltros()">
+                <ion-select-option [value]="null">Todos los usuarios</ion-select-option>
+                <ion-select-option *ngFor="let user of users" [value]="user.idUsuario">
+                  {{ user.strNombre || user.strEmail }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Fecha Inicio</ion-label>
+              <ion-input type="date" [(ngModel)]="fechaInicio" (ionChange)="aplicarFiltros()"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Fecha Fin</ion-label>
+              <ion-input type="date" [(ngModel)]="fechaFin" (ionChange)="aplicarFiltros()"></ion-input>
+            </ion-item>
+          </div>
+
+          <ion-button expand="block" fill="outline" (click)="limpiarFiltros()" class="clear-filters-btn">
+            Limpiar Filtros
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Estadísticas Generales -->
+      <ion-card class="stats-card">
+        <ion-card-header>
+          <ion-card-title>Estadísticas Generales</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value">{{ totalTareas }}</div>
+              <div class="stat-label">Total Tareas</div>
+            </div>
+            <div class="stat-item success">
+              <div class="stat-value">{{ tareasCompletadas }}</div>
+              <div class="stat-label">Completadas</div>
+            </div>
+            <div class="stat-item warning">
+              <div class="stat-value">{{ tareasPendientes }}</div>
+              <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-item info">
+              <div class="stat-value">{{ tareasEnProgreso }}</div>
+              <div class="stat-label">En Progreso</div>
+            </div>
+          </div>
+
+          <div class="progress-bar-container">
+            <div class="progress-label">Progreso General: {{ getPorcentajeCompletadas() }}%</div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getPorcentajeCompletadas()"></div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Estadísticas por Prioridad -->
+      <ion-card class="priority-card">
+        <ion-card-header>
+          <ion-card-title>Por Prioridad</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="priority-stats">
+            <div class="priority-item high">
+              <div class="priority-label">Alta</div>
+              <div class="priority-value">{{ tareasAlta }}</div>
+            </div>
+            <div class="priority-item med">
+              <div class="priority-label">Media</div>
+              <div class="priority-value">{{ tareasMedia }}</div>
+            </div>
+            <div class="priority-item low">
+              <div class="priority-label">Baja</div>
+              <div class="priority-value">{{ tareasBaja }}</div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Estadísticas por Usuario -->
+      <ion-card class="users-card" *ngIf="statsPorUsuario.length > 0">
+        <ion-card-header>
+          <ion-card-title>Estadísticas por Usuario</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="users-stats">
+            <div *ngFor="let stat of statsPorUsuario" class="user-stat-item">
+              <div class="user-header">
+                <div class="user-name">{{ stat.usuario.strNombre || stat.usuario.strEmail }}</div>
+                <div class="user-role">{{ stat.usuario.rol === 'administrador' ? 'Admin' : 'Alumno' }}</div>
+              </div>
+              <div class="user-stats-grid">
+                <div class="user-stat">
+                  <div class="user-stat-value">{{ stat.total }}</div>
+                  <div class="user-stat-label">Total</div>
+                </div>
+                <div class="user-stat success">
+                  <div class="user-stat-value">{{ stat.completadas }}</div>
+                  <div class="user-stat-label">Completadas</div>
+                </div>
+                <div class="user-stat warning">
+                  <div class="user-stat-value">{{ stat.pendientes }}</div>
+                  <div class="user-stat-label">Pendientes</div>
+                </div>
+                <div class="user-stat info">
+                  <div class="user-stat-value">{{ stat.enProgreso }}</div>
+                  <div class="user-stat-label">En Progreso</div>
+                </div>
+              </div>
+              <div class="user-progress">
+                <div class="progress-label">Progreso: {{ getPorcentajePorUsuario(stat.completadas, stat.total) }}%</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="getPorcentajePorUsuario(stat.completadas, stat.total)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
+
